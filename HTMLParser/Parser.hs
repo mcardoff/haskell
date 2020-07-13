@@ -8,21 +8,6 @@ data HTML = Element {elemName :: String, elemContent :: [HTML]}
           | Attribute {attribName :: String, attribVal :: String}
           | Text {textContent :: String} deriving Show
 
--- instance Show HTML where
---     show (Element s l) = "\nElem\n" ++ "Name: " ++ show s ++ "\nContent: " ++ show l ++ "\n"
---     show (Attribute n v) = "\nAtrib\n" ++ "Name: " ++ show n ++ "\nVal: " ++ show v ++ "\n"
---     show (Text s) = "Text:\n" ++ "Cont: " ++ show s ++ "\n"
-
-htmlPlus :: HTML -> HTML -> HTML
-htmlPlus a b = if (eA == eB)
-               then Element eA (cA ++ cB)
-               else a
-    where eA = elemName a
-          cA = elemContent a
-          eB = elemName b
-          cB = elemContent b
-
-
 newtype Parser a = Parser {parse :: String -> Maybe (String, a)}
 
 instance Functor Parser where
@@ -76,9 +61,9 @@ ws :: Parser String
 ws = spanP isSpace
 
 btwSpace :: Parser a -> Parser a
-btwSpace p = betweenP ws ws p
+btwSpace = betweenP ws ws
 
-sepBy :: Parser a -> Parser b -> Parser [b]
+sepBy :: Parser a -> Parser b -> Parser [b] -- Not used int HTML
 sepBy sep elem = ((:) <$> elem <*> many (sep *> elem)) <|> pure []
 
 token :: Parser String
@@ -132,13 +117,13 @@ attribP :: Parser HTML
 attribP = Attribute <$> (token <* charP '=') <*> stringLiteral
 
 textP :: Parser HTML
-textP = Text <$> (betweenP ws ws $ spanP' (\x -> (x/='<')&&(x/='>')))
+textP = Text <$> betweenP ws ws (spanP' (\x -> (x/='<')&&(x/='>')))
 
 elemP :: Parser HTML
-elemP = ((\x y z -> Element x $ y++z)
-        <$> (openTag)
-        <*> (many attribP <* charP '>')
-        <*> (many (elemP <|> textP) <* manyClose)) -- <* manyClose
+elemP = (\x y z -> Element x $ y++z)
+        <$> openTag
+        <*> many attribP <* charP '>'
+        <*> many (elemP <|> textP) <* manyClose
 
 html :: Parser HTML
 html = htmlOpening *> elemP
