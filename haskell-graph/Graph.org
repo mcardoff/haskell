@@ -1,0 +1,7 @@
+* Work on
+** Turn directed to undirected
+   For this to be true, all key value pairs need to be present in the
+   initial list
+   
+   This means that we need to combine the original list with all the
+   values swapped

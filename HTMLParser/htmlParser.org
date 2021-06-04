@@ -43,11 +43,14 @@
   parse its attributes (and the end of the opening tag) and then c to
   parse the rest. Hopefully this could mean that they would be:
   
-  - a = token (Parser String which parses letters separated by ws
-  - b = many attribP <* charP '>' (Parser HTML which gets the attributes then the close tag, may have to use sequence)
-  - c = many htmlElem <|> textP
+  - a = token
+    - Parser String which parses letters separated by ws
+  - b = many attribP <* charP '>'
+    - Parser HTML which gets the attributes then the close tag, may have to use sequence
+  - c = many $ htmlElem <|> textP
+    - Parser [HTML], will either get the text from an element, or will get the next elem
 
-** Better Ideas
+** Better Ideas?
    The current applicative parser, which is written in the following way:
    #+BEGIN_SRC haskell
    elemP :: Parser HTML
@@ -64,11 +67,12 @@
    #+BEGIN_SRC haskell
    betweenP (stringP openTag) (stringP closeTag "openName") moreHTMLParser
    #+END_SRC
-
-   this would make the most sense monadically as:
    
-   #+BEGIN_SRC 
-   parseBetweenTags = Parser $ \s -> 
-                                do name <- openTag
-				   
-   #+END_SRC
+   This does not make sense in the way we are doing it, as it requires
+   first parsing the tag, piping that into the closeTag, which would
+   require knowing the name before execution.
+
+   This whole method is not practical, and it only really makes sense
+   if we were to use Monads, as they allow for binding of variables to operations
+
+*** TODO Find a way to use applicatives to ensure proper html formatting
